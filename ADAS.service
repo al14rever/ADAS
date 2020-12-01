@@ -1,0 +1,11 @@
+[Unit]
+Description=ADAS Service
+
+[Service]
+User=root
+WorkingDirectory=/root
+ExecStart=/root/ADAS
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
