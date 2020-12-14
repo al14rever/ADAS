@@ -89,6 +89,30 @@ void lcdi2c::print(std::string str1, std::string str2, int ofset) {
     this->print(str2);
 }
 
+void lcdi2c::print(std::string str1, std::string str2, std::string str3, std::string str4) {
+    this->clear();
+    this->setcursor(0, 0);
+    this->print(str1);
+    this->setcursor(0, 1);
+    this->print(str2);
+    this->setcursor(0+20, 0);
+    this->print(str3);
+    this->setcursor(0+20, 1);
+    this->print(str4);
+};
+
+void lcdi2c::print(const char *str1, const char *str2, const char *str3, const char *str4) {
+    this->clear();
+    this->setcursor(0, 0);
+    this->print(str1);
+    this->setcursor(0, 1);
+    this->print(str2);
+    this->setcursor(0+20, 0);
+    this->print(str3);
+    this->setcursor(0+20, 1);
+    this->print(str4);
+};
+
 void lcdi2c::print(const char *str, int col, int row) {
 	this->setcursor(col, row);
 	this->print(str);

@@ -112,6 +112,8 @@ struct devicestruct {
     std::string code;
     std::string taken;
     std::string id;
+    std::string dev_id;
+    std::string name;
 };
 
 class prog {
@@ -126,8 +128,8 @@ private:
     userstruct user;
     devicestruct device;
 
-    const char *url = "";
-    const char *databasename = "";
+    const char *url;
+    const char *databasename = "test";
 
     std::string getcode(int timeout, int step);
 
@@ -143,7 +145,7 @@ private:
 
     bool updatelogentry();
 
-    bool placeholder(std::string str1, std::string str2, int mode = 2, int arg = 2000);
+    bool placeholder(std::string str1, std::string str2, std::string str3, std::string str4, int mode = 2, int arg = 2000);
 
     bool anotherdevice(int timeout, int step);
 
@@ -152,7 +154,7 @@ private:
     int convert_utf8_to_windows1251(const char* utf8, char* windows1251, size_t n);
 
 public:
-    prog(int lcdadr, const char *keyadr, int keydelay, const char *serialadr, int baudrate);
+    prog(int lcdadr, const char *keyadr, const char *databaseuri, const char *database, const char *serialadr, int baudrate);
 
     void start();
 };

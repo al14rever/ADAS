@@ -10,7 +10,7 @@ barcode::barcode(const char *port, int baudrate) {
 		log("[ERROR] (barcode) Unable to start wiringPi");
 		return;
 	}
-}
+};
 
 char* barcode::getcode() {
 	std::string str;
@@ -29,4 +29,9 @@ char* barcode::getcode() {
 	} else {
 		throw false;
 	}
-}
+};
+
+bool barcode::trigger() {
+    serialPuts(fd, this->trigreq);
+    return true;
+};
