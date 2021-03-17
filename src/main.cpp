@@ -6,7 +6,7 @@
 
 
 int main(int argc, char const *argv[]) {
-    logcln();
+    log("[INFO] ADAS starting...");
 
     std::vector<std::string*> config;
 

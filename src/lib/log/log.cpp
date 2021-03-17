@@ -15,7 +15,7 @@ void log(const char *text) {
     std::tm* now = std::localtime(&time);
     std::ofstream log;
     log.open("ADAS.log", std::fstream::app);
-    log << now->tm_mday << '-' << (now->tm_mon + 1) << '-' << (now->tm_year + 1900) << " " << text << "\n";
+    log << now->tm_mday << '-' << (now->tm_mon + 1) << '-' << (now->tm_year + 1900) << " " << now->tm_hour << ":" << now->tm_min << " " << text << "\n";
     log.close();
 }
 
@@ -24,6 +24,6 @@ void log(const char *head, const char *error) {
     std::tm* now = std::localtime(&time);
     std::ofstream log;
     log.open("ADAS.log", std::fstream::app);
-    log << now->tm_mday << '-' << (now->tm_mon + 1) << '-' << (now->tm_year + 1900) << " " << head << error << "\n";
+    log << now->tm_mday << '-' << (now->tm_mon + 1) << '-' << (now->tm_year + 1900) << " " << now->tm_hour << ":" << now->tm_min << " " << head << error << "\n";
     log.close();
 }
