@@ -92,7 +92,8 @@ void prog::start() {
             } else if (usrchk == 0) {
                 this->placeholder("йнд ме мюидем", "онопнасире ямнбю", "", "", 3, 2000);
             } else if (usrchk == -1) {
-                this->placeholder("ме сдюкняэ", "янедхмхрэяъ я ад", "", "", 3, 2000);
+                this->placeholder("янедхмемхе я ад ме", "Yдюкняэ, онопнаYире", "еые пю3", "", 3, 2000);
+                return;
             }
         }
     }
