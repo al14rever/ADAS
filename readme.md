@@ -71,7 +71,7 @@ System 🠊 Hardware 🠊 [Включить порты I2C и UART]
 ```bash
     sudo cp ADAS /root
     sudo cp ../../adas.config /root
-    sudo +x /root/ADAS
+    sudo chmod +x /root/ADAS
     sudo cp ../ADAS.service /etc/systemd/system/
     sudo systemctl daemon-reload
     sudo systemctl enable ADAS.service
