@@ -128,16 +128,16 @@ private:
     userstruct user;
     devicestruct device;
 
+    int timeout;
+
     const char *url;
     const char *databasename = "test";
 
-    std::string getcode(int timeout, int step);
+    std::string getcode(int timeout, int step, int mode);
 
-    bool checkuser();
+    int checkuser();
 
     bool checkdevice();
-
-    bool checkdeviceref();
 
     bool updatedevice(std::string taken);
 
@@ -145,7 +145,7 @@ private:
 
     bool updatelogentry();
 
-    bool placeholder(std::string str1, std::string str2, std::string str3, std::string str4, int mode = 2, int arg = 2000);
+    bool placeholder(std::string str1, std::string str2, std::string str3, std::string str4, int mode = 3, int arg = 2000, int timeout = 60000, int step = 50);
 
     bool anotherdevice(int timeout, int step);
 
@@ -154,7 +154,8 @@ private:
     int convert_utf8_to_windows1251(const char* utf8, char* windows1251, size_t n);
 
 public:
-    prog(int lcdadr, const char *keyadr, const char *databaseuri, const char *database, const char *serialadr, int baudrate);
+    prog(int lcdadr, const char *keyadr, const char *databaseuri, const char *database, const char *serialadr,
+         int baudrate, int timeout);
 
     void start();
 };

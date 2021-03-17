@@ -1,9 +1,13 @@
 #include "lib/prog/prog.h"
+#include "lib/log/log.h"
 #include <fstream>
 #include <algorithm>
 #include <vector>
 
+
 int main(int argc, char const *argv[]) {
+    logcln();
+
     std::vector<std::string*> config;
 
     std::string *cfgpat;
@@ -26,11 +30,14 @@ int main(int argc, char const *argv[]) {
         }
     }
     else {
+        log("[ERROR] (main:13) Can't read config!");
         //can't read config
         return -1;
     }
 
-    std::string finalconfig[6];
+    std::string finalconfig[7];
+
+
     /*
      * 0 - lcd address
      * 1 - key address (path to event file ex /dev/input/event0)
@@ -40,12 +47,12 @@ int main(int argc, char const *argv[]) {
      * 5 - uart baud rate (9600, 1920, 57600, 115200 etc.)
      */
 
-    if (config.size() > 6) {
-        //wrong config length
+    if (config.size() > 7) {
+        log("[ERROR] (main:51) Wrong config!");
         return -2;
     }
 
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 7; ++i) {
         if(config[i][0].compare("lcd_address") == 0) {
             finalconfig[0] = config[i][1];
         } else if(config[i][0].compare("keyboard_address") == 0) {
@@ -58,10 +65,18 @@ int main(int argc, char const *argv[]) {
             finalconfig[4] = config[i][1];
         } else if(config[i][0].compare("uart_baud_rate") == 0) {
             finalconfig[5] = config[i][1];
+        } else if(config[i][0].compare("timeout") == 0) {
+            finalconfig[6] = config[i][1];
         }
     }
 
-    prog prg = prog(std::stoi(finalconfig[0]), finalconfig[1].c_str(), finalconfig[2].c_str(), finalconfig[3].c_str(), finalconfig[4].c_str(), std::stoi(finalconfig[5]));
-    prg.start();
+    try {
+        prog prg = prog(std::stoi(finalconfig[0]), finalconfig[1].c_str(), finalconfig[2].c_str(), finalconfig[3].c_str(), finalconfig[4].c_str(), std::stoi(finalconfig[5]), std::stoi(finalconfig[6]));
+        prg.start();
+    } catch (std::exception e) {
+        log("[ERROR] (main:75) ", e.what());
+        return -3;
+    }
+
     return 0;
 }

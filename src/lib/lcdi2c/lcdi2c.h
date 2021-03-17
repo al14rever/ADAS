@@ -37,4 +37,6 @@ public:
 	void clear();
 	
 	void init();
+
+	void backlightturn(bool turn);
 };

@@ -1,14 +1,15 @@
 #include "prog.h"
 
-prog::prog(int lcdadr, const char *keyadr, const char *databaseuri, const char *database, const char *serialadr, int baudrate) {
+prog::prog(int lcdadr, const char *keyadr, const char *databaseuri, const char *database, const char *serialadr, int baudrate, int timeout) {
     this->url = databaseuri;
     this->databasename = database;
+    this->timeout = timeout;
     mongocxx::instance instance{};
     this->client = new mongocxx::client(mongocxx::uri(this->url));
     this->db = this->client->database(this->databasename);
 
     this->lcd = new lcdi2c(lcdadr);
-    this->key = new keyboard(keyadr, 120000);
+    this->key = new keyboard(keyadr, this->timeout);
     this->bar = new barcode(serialadr, baudrate);
 };
 
@@ -23,29 +24,32 @@ void prog::start() {
         this->user.shortname.clear();
         this->user.id.clear();
 
-        if (this->placeholder("мюфлхре ENTER", "дкъ бундю", "", "", 1, 96)) {
-            this->lcd->print("яйюмхпсире хкх", "ббедхре йнд");
+        if (this->placeholder("мюфлхре ENTER", "дкъ бундю", "", "", 2, 96, this->timeout*2, 50)) {
             try {
-                this->user.code = this->getcode(120000, 50);
+                this->user.code = this->getcode(this->timeout, 50, 1);
             } catch (time_out) {
                 cont = false;
-                this->placeholder("бпелъ", "бшькн", "", "", 2, 1000);
+                this->placeholder("бпелъ бшькн", "", "", "йсдю?", 3, 1000);
             }
-            this->lcd->print("онднфдхре", "");
-            if (cont && this->checkuser()) {
-                this->placeholder("гдпюбярбсире", this->user.shortname, "", "", 2, 1500);
+            int usrchk = 2;
+            if (cont) {
+                this->lcd->print("онднфдхре", "");
+                usrchk = this->checkuser();
+            }
+            if (cont && usrchk == 1) {
+                this->placeholder("гдпюбярбсире", this->user.shortname, "", "", 3, 1500);
                 while (true) {
                     this->device.code.clear();
                     this->device.taken.clear();
                     this->device.id.clear();
-                    mode = selectmode(120000, 50);
+                    mode = selectmode(this->timeout, 50);
                     if (mode == 0) {
                         break;
                     }
                     try {
-                        this->device.code = this->getcode(120000, 50);
+                        this->device.code = this->getcode(this->timeout, 50, 2);
                     } catch (time_out) {
-                        this->placeholder("бпелъ", "бшькн", "", "", 2, 1000);
+                        this->placeholder("бпелъ", "бшькн", "", "", 3, 1000);
                         break;
                     }
                     this->lcd->print("онднфдхре", "");
@@ -54,48 +58,51 @@ void prog::start() {
                             if (this->device.taken == "0") {
                                 this->updatedevice("1");
                                 this->createlogentry();
-                                this->placeholder("бш бгъкх сярпниярбн", "сярпниярбн", this->device.name, "", 2, 2000);
-                                if (!this->anotherdevice(120000, 50)) {
+                                this->placeholder("бш бгъкх сярпниярбн", "сярпниярбн", this->device.name, "", 3, 2000);
+                                if (!this->anotherdevice(this->timeout, 50)) {
                                     break;
                                 }
                             } else {
                                 this->updatelogentry();
                                 this->createlogentry();
-                                this->placeholder("бш бгъкх сярпниярбн", "сярпниярбн", this->device.name, "", 2, 2000);
-                                if (!this->anotherdevice(120000, 50)) {
+                                this->placeholder("бш бгъкх сярпниярбн", "сярпниярбн", this->device.name, "", 3, 2000);
+                                if (!this->anotherdevice(this->timeout, 50)) {
                                     break;
                                 }
                             }
                         } else if (mode == 2) {
-                            if (this->device.taken == "1") {
+                            if (this->device.taken != "0") {
                                 this->updatedevice("0");
                                 this->updatelogentry();
-                                this->placeholder("бш бепмскх", "сярпниярбн", this->device.name, "", 2, 2000);
-                                if (!this->anotherdevice(120000, 50)) {
+                                this->placeholder("бш бепмскх", "сярпниярбн", this->device.name, "", 3, 2000);
+                                if (!this->anotherdevice(this->timeout, 50)) {
                                     break;
                                 }
                             } else {
-                                this->placeholder("щрн сярпниярбн еые", "мхйрн ме бгък", "", "", 2, 1500);
+                                this->placeholder("щрн сярпниярбн еые", "мхйрн ме бгък", "", "", 3, 1500);
                             }
                         }
                     } else {
                         if (!this->user.code.empty()) {
-                            this->placeholder("йнд ме мюидем", "онопнасире ямнбю", "", "", 2, 2000);
+                            this->placeholder("йнд ме мюидем", "онопнасире ямнбю", "", "", 3, 2000);
                         }
                     }
                 }
-                this->placeholder("дн ябхдюмхъ", "", "", "", 2, 2000);
-            } else {
-                this->placeholder("йнд ме мюидем", "онопнасире ямнбю", "", "", 2, 2000);
+                this->placeholder("дн ябхдюмхъ", "", "", "", 3, 2000);
+            } else if (usrchk == 0) {
+                this->placeholder("йнд ме мюидем", "онопнасире ямнбю", "", "", 3, 2000);
+            } else if (usrchk == -1) {
+                this->placeholder("ме сдюкняэ", "янедхмхрэяъ я ад", "", "", 3, 2000);
             }
         }
     }
 };
 
-std::string prog::getcode(int timeout, int step) {
+std::string prog::getcode(int timeout, int step, int mode) {
     int time = 0;
     int timeforscan = 0;
     int key;
+    bool scan = true;
     std::string ret, bar;
 
 
@@ -123,8 +130,14 @@ std::string prog::getcode(int timeout, int step) {
         3 - 81 6 - 77 9 - 73
     */
 
+
     this->lcd->init();
-    this->lcd->print("яйюмхпсире хкх", "ббедхре йнд");
+    if (mode == 1) {
+        this->lcd->print("яйюмхпсире хкх", "ббедхре йнд", "онкэ3нбюрекъ", "");
+    } else if (mode == 2) {
+        this->lcd->print("яйюмхпсире хкх", "ббедхре йнд", "сярпниярбю", "");
+    }
+
 
 
     while (time < timeout) {
@@ -182,17 +195,27 @@ std::string prog::getcode(int timeout, int step) {
                 case 96:
                     return ret;
             }
+            if (ret.length() > 16) {
+                ret.erase(ret.length()-1);
+            }
+            if (scan) {
+                if (ret.length() > 0) {
+                    scan = false;
+                }
+            }
             update_screen(ret, this);
             time = 0;
         } catch(end_time) {
             time += step;
         }
 
-        if (timeforscan > 500) {
-            this->bar->trigger();
-            timeforscan = 0;
-        } else {
-            timeforscan += step;
+        if (scan) {
+            if (timeforscan > 500) {
+                this->bar->trigger();
+                timeforscan = 0;
+            } else {
+                timeforscan += step;
+            }
         }
 
         try {
@@ -208,8 +231,25 @@ std::string prog::getcode(int timeout, int step) {
     throw time_out();
 };
 
-bool prog::checkuser() {
-    bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result = this->db["users"].find_one(document{} << "code" << this->user.code << finalize);
+int prog::checkuser() {
+    bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result;
+
+    try {
+        maybe_result = this->db["users"].find_one(document{} << "code" << this->user.code << finalize);
+    }
+    catch(const std::runtime_error& re) {
+        log("[ERROR] (prog:218) ", re.what());
+        return -1;
+    }
+    catch(const std::exception& ex) {
+        log("[ERROR] (prog:222) ", ex.what());
+        return -1;
+    }
+    catch(...) {
+        log("[ERROR] (prog:226) Unknown failure occurred. Possible memory corruption");
+        return -1;
+    }
+
     if(maybe_result) {
         this->user.username = maybe_result->view()["about"].get_utf8().value.to_string();
         this->user.id = maybe_result->view()["_id"].get_oid().value.to_string();
@@ -258,9 +298,9 @@ bool prog::checkuser() {
             }
         }
 
-        return true;
+        return 1;
     }
-    return false;
+    return 0;
 };
 
 bool prog::checkdevice() {
@@ -399,13 +439,33 @@ int prog::selectmode(int timeout, int step) {
     return 0;
 };
 
-bool prog::placeholder(std::string str1, std::string str2, std::string str3, std::string str4, int mode, int arg) {
+bool prog::placeholder(std::string str1, std::string str2, std::string str3, std::string str4, int mode, int arg, int timeout, int step) {
     this->lcd->init();
     this->lcd->print(str1, str2, str3, str4);
-    if (mode == 1) {
+    if (mode == 2) {
+        int time = 0;
+        int key;
+
+        while (time < timeout) {
+            try {
+                key = this->key->getkey(50);
+                if (key == arg) {
+                    return true;
+                }
+            } catch (end_time) {
+                time += step;
+            }
+        }
+
+        this->lcd->clear();
+        this->lcd->backlightturn(false);
+        this->key->waitforkey(arg);
+        this->lcd->backlightturn(true);
+        this->placeholder("мюфлхре ENTER", "дкъ бундю", "", "", 2, 96, this->timeout*2, 50);
+    } else if (mode == 1) {
         this->key->waitforkey(arg);
     } else {
-        usleep(arg*1000);
+        usleep(arg * 1000);
     }
     return true;
 };

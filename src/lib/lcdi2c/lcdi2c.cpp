@@ -165,7 +165,7 @@ void lcdi2c::printchar(char ch) {
 				this->sendData(out);
 			} else {
 				out = this->searchChar(ch);
-				if (out != 0) {
+				if (out != -1) {
 					this->sendData(out);
 				} else {
 					out = askiitoru[(int)(ch-192)];
@@ -204,5 +204,14 @@ int lcdi2c::searchChar(char ch) {
 			return (i-1);
 		}
 	}
-	return 0;
+	return -1;
+}
+
+void lcdi2c::backlightturn(bool turn) {
+    if (turn) {
+        this->backlight = 0x08;
+    } else {
+        this->backlight = 0x00;
+    }
+    this->sendI2C(this->backlight);
 }

@@ -35,3 +35,6 @@
 
 cmake-build-debug
 .idea
+
+# Development files
+adas_dev.config
